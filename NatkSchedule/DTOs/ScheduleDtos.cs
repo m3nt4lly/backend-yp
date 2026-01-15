@@ -16,8 +16,6 @@ public class LessonDto
     public string TimeStart { get; set; } = string.Empty;
     public string TimeEnd { get; set; } = string.Empty;
     
-    // Карта подгрупп: FULL, SUB1, SUB2 -> Детали пары
-    // Если FULL занято, то SUB1 и SUB2 не должны быть (или дублировать)
     public Dictionary<string, LessonPartDto> Parts { get; set; } = new();
 }
 
