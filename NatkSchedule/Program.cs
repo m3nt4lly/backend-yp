@@ -6,11 +6,8 @@ using NatkSchedule.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Загрузка .env файла
 Env.Load();
 
-// Получение строки подключения
-// Сначала пробуем из переменных окружения (Docker/EnvFile), затем из appsettings
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") 
                        ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -25,10 +22,8 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Включаем Swagger всегда для удобства проверки (в учебном проекте)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -36,14 +31,11 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger"; 
 });
 
-// Редирект с корня на Swagger
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/swagger");
     return Task.CompletedTask;
 });
-
-// app.UseHttpsRedirection(); // Отключаем для упрощения локальной разработки с эмулятором
 
 app.UseAuthorization();
 

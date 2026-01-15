@@ -33,7 +33,6 @@ public class ScheduleService : IScheduleService
             throw new Exception($"Group {groupName} not found");
         }
 
-        // Загружаем расписание для группы + глобальное (LessonTimes)
         var schedules = await _context.Schedules
             .Include(s => s.LessonTime)
             .Include(s => s.Subject)
@@ -48,19 +47,10 @@ public class ScheduleService : IScheduleService
 
         var result = new List<ScheduleByDateDto>();
 
-        // Проходим по каждому дню в диапазоне
         for (var date = startDate; date <= endDate; date = date.AddDays(1))
         {
-            // Определяем день недели (PostgreSQL ISODOW: 1=Monday, 7=Sunday)
-            // C# DayOfWeek: 0=Sunday, 1=Monday
-            // Наша БД: WeekdayId 1..6 (Пн..Сб). Воскресенье пропускаем или обрабатываем отдельно.
-            // Проще взять weekdayName из локализации или таблицы, но у нас есть WeekdayId.
-            // Можно просто проверить, есть ли пары или пропуск.
-            
-            // Получим имя дня недели (можно из DateTime)
             var dayOfWeekRu = date.ToString("dddd", new System.Globalization.CultureInfo("ru-RU"));
             
-            // Делаем первую букву заглавной
             if (!string.IsNullOrEmpty(dayOfWeekRu))
             {
                 dayOfWeekRu = char.ToUpper(dayOfWeekRu[0]) + dayOfWeekRu.Substring(1);
@@ -81,8 +71,6 @@ public class ScheduleService : IScheduleService
                     TimeEnd = lt.TimeEnd.ToString("HH:mm")
                 };
 
-                // Ищем занятия для этого слота
-                // Может быть несколько записей (подгруппы) или одна (FULL)
                 var lessons = schedules
                     .Where(s => s.LessonDate == date && s.LessonTimeId == lt.LessonTimeId)
                     .ToList();
@@ -102,10 +90,6 @@ public class ScheduleService : IScheduleService
                     lessonDto.Parts[lesson.GroupPart.ToString()] = partDto;
                 }
 
-                // Добавляем пару, даже если она пустая (чтобы сетка была полной)
-                // Или можно добавлять только если есть пары. 
-                // ТЗ "группировать расписание по датам, заполняя пропуски, если пар нет" - видимо имеется в виду пустые дни или пары.
-                // Обычно на клиенте удобнее получать структуру 1-4 пары.
                 dailySchedule.Lessons.Add(lessonDto);
             }
 
