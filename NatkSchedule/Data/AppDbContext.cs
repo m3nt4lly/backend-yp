@@ -62,5 +62,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Schedule>()
             .HasIndex(s => new { s.LessonDate, s.LessonTimeId, s.ClassroomId })
             .IsUnique();
+
+        modelBuilder.Entity<Schedule>()
+            .HasOne(s => s.StudentGroup)
+            .WithMany()
+            .HasForeignKey(s => s.GroupId);
     }
 }
