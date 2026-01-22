@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: natk-schedule-db
+    environment:
+      POSTGRES_DB: natk-shedule
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Passw0rd
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - ./Database/natk-schedule.sql:/docker-entrypoint-initdb.d/natk-schedule.sql
+    networks:
+      - natk-network
+
+  api:
+    build:
+      context: ./NatkSchedule
+      dockerfile: Dockerfile
+    container_name: natk-schedule-api
+    environment:
+      - DB_CONNECTION_STRING=Host=db;Port=5432;Database=natk-shedule;Username=postgres;Password=Passw0rd
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - db
+    networks:
+      - natk-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: natk-schedule-nginx
+    ports:
+      - "5001:443"
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - api
+    networks:
+      - natk-network
+    restart: unless-stopped
+
+networks:
+  natk-network:
+    driver: bridge
